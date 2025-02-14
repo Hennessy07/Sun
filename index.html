@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buchet de flori</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #startContainer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url('nyc.jpg'); /* Image changed to nyc.jpg */
+            background-size: cover;
+            background-position: bottom; /* Start image from the bottom */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #startButton {
+            font-size: 1.5rem;
+            padding: 1rem 2rem;
+            background-color: #50c878;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 3;
+        }
+
+        #startButton:hover {
+            background-color: #3cae60;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        #musicButton {
+            display: none;
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            font-size: 1rem;
+            padding: 10px 20px;
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 5;
+        }
+
+        #musicButton:hover {
+            background-color: #e84118;
+        }
+    </style>
+</head>
+<body>
+    <div id="startContainer">
+        <button id="startButton">Incepe</button>
+    </div>
+    <canvas id="flowerCanvas"></canvas>
+    <button id="musicButton" onclick="redirectToMusic()">🎵 Nostalgic Bangers</button>
+
+    <!-- Background Audio -->
+    <audio id="backgroundAudio" loop>
+        <source src="NYC.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        const canvas = document.getElementById("flowerCanvas");
+        const ctx = canvas.getContext("2d");
+        const startButton = document.getElementById("startButton");
+        const startContainer = document.getElementById("startContainer");
+        const musicButton = document.getElementById("musicButton");
+        const backgroundAudio = document.getElementById("backgroundAudio");
+
+        let moonX, moonY;
+        let easterEggActive = false;
+        let flowerClicks = 0; // Counter for flower clicks
+        let flowers = []; // Store flowers to clear them when Easter Egg is triggered
+
+        function setCanvasDimensions() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function drawNightBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, "#100015");
+            gradient.addColorStop(1, "#1f002a");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawMoon(x, y) {
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = "#eae2fc";
+
+            ctx.beginPath();
+            ctx.arc(x, y, 50, 0, Math.PI * 2);
+            ctx.fillStyle = "#eae2fc";
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = "transparent";
+        }
+
+        function drawFlower(x, y, color) {
+            const petals = 5;
+            const radius = 20;
+            const petalLength = 30;
+
+            const flower = {
+                x: x,
+                y: y,
+                color: color
+            };
+
+            flowers.push(flower);
+
+            for (let i = 0; i < petals; i++) {
+                const angle = (Math.PI * 2 / petals) * i;
+                ctx.beginPath();
+                ctx.fillStyle = color;
+                ctx.ellipse(
+                    x + Math.cos(angle) * radius,
+                    y + Math.sin(angle) * radius,
+                    petalLength / 2,
+                    radius / 2,
+                    angle,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.fillStyle = "yellow";
+            ctx.arc(x, y, radius / 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            ctx.arc(x, y, radius / 3, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function clearFlowers() {
+            flowers = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawNightBackground();
+            drawMoon(moonX, moonY);
+        }
+
+        function drawMessage(message) {
+            const easterEggMessage = document.createElement("div");
+            easterEggMessage.textContent = message;
+            easterEggMessage.style.position = "absolute";
+            easterEggMessage.style.top = "50%";
+            easterEggMessage.style.left = "50%";
+            easterEggMessage.style.transform = "translate(-50%, -50%)";
+            easterEggMessage.style.fontSize = "2rem";
+            easterEggMessage.style.fontWeight = "bold";
+            easterEggMessage.style.color = "#f5e042";
+            easterEggMessage.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+            easterEggMessage.style.padding = "1rem";
+            easterEggMessage.style.borderRadius = "10px";
+            easterEggMessage.style.textAlign = "center";
+            easterEggMessage.style.zIndex = "10";
+            document.body.appendChild(easterEggMessage);
+
+            // Remove the message after 3 seconds
+            setTimeout(() => {
+                easterEggMessage.remove();
+            }, 3000);
+        }
+
+        // Function to trigger Easter Egg
+        function showEasterEgg() {
+            clearFlowers();
+            drawMessage("𝙎𝙪𝙣 𝙞𝙨 𝙝𝙤𝙩𝙩𝙚𝙧 𝙩𝙝𝙖𝙣 𝙩𝙝𝙚 𝙨𝙪𝙣, 𝙙𝙤𝙣'𝙩 𝙣𝙚𝙚𝙙 𝙖𝙣𝙤𝙩𝙝𝙚𝙧 𝙤𝙣𝙚!");
+        }
+
+        // Modify the canvas click listener to trigger the Easter egg
+        canvas.addEventListener("click", (e) => {
+            if (easterEggActive) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if the click is on the moon
+            if (Math.hypot(x - moonX, y - moonY) < 50) {
+                showEasterEgg(); // Show the Easter Egg message
+            } else {
+                const colors = ["#4f83cc", "#7daed3", "#a1c1e0"]; // Restoring original flower colors
+                const flowerCount = Math.floor(Math.random() * 5) * 2 + 1; // Generate odd number of flowers (1, 3, 5, etc.)
+                
+                // Draw odd number of flowers
+                for (let i = 0; i < flowerCount; i++) {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    drawFlower(x + Math.random() * 100 - 50, y + Math.random() * 100 - 50, color);
+                }
+
+                flowerClicks++;
+
+                if (flowerClicks === 3) {
+                    musicButton.style.display = "block"; // Show the music button after 3 clicks
+                }
+            }
+        });
+
+        startButton.addEventListener("click", () => {
+            startContainer.style.display = "none"; // Hide the start screen
+            canvas.style.display = "block"; // Show the canvas
+            setCanvasDimensions();
+            drawNightBackground();
+            moonX = canvas.width - 100;
+            moonY = 100;
+            drawMoon(moonX, moonY);
+
+            // Play background music when the game starts
+            backgroundAudio.play();
+        });
+
+        window.addEventListener("resize", () => {
+            setCanvasDimensions();
+            drawNightBackground();
+            drawMoon(moonX, moonY);
+        });
+
+        // Function to redirect to the music playlist
+        function redirectToMusic() {
+            window.location.href = "https://music.apple.com/ro/playlist/nostalgic-bangers/pl.u-6mo4aP3I8bpqdJv";
+        }
+    </script>
+</body>
+</html>
